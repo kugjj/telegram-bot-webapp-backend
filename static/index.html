@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мой Бот</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f9f9f9; }
+        h1 { color: #2c3e50; }
+        .action { padding: 10px; margin: 8px 0; background: #ecf0f1; border-radius: 8px; font-size: 14px; }
+        .loader { color: #7f8c8d; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>Привет, <span id="user">Пользователь</span>!</h1>
+    <div id="actions" class="loader">Загрузка действий...</div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        const user = tg.initDataUnsafe.user;
+        document.getElementById('user').textContent = user?.username || user?.first_name || "Пользователь";
+
+        const API_URL = "https://your-railway-project.up.railway.app";  // ⚠️ ПОМЕНЯЙ НА СВОЙ
+
+        fetch(`${API_URL}/api/user/actions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: user.id })
+        })
+        .then(r => r.json())
+        .then(data => {
+            const container = document.getElementById('actions');
+            container.innerHTML = '';
+            if (!data || data.length === 0) {
+                container.textContent = 'У вас пока нет действий.';
+                return;
+            }
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'action';
+                const time = new Date(item.time).toLocaleString('ru-RU');
+                div.textContent = `[${time}] ${item.action}`;
+                container.appendChild(div);
+            });
+        })
+        .catch(err => {
+            console.error("Ошибка:", err);
+            document.getElementById('actions').textContent = 'Не удалось загрузить данные.';
+        });
+    </script>
+</body>
+</html>
