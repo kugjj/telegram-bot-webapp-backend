@@ -9,14 +9,10 @@ CORS(app)    # Разрешает запросы с любого домена
 
 @app.route('/api/user/actions', methods=['POST'])
 def user_actions():
-    print("🔹 [DEBUG] Получен запрос на /api/user/actions")
-    print("🔹 [DEBUG] JSON тело:", request.json)
+    print("🔹 [DEBUG] Запрос получен!")
+    print("🔹 [DEBUG] Тело запроса:", request.json)
     user_id = request.json.get('user_id')
-    if not user_id:
-        print("🔸 Ошибка: user_id не передан")
-        return jsonify({"error": "user_id required"}), 400
     actions = database.get_user_actions(user_id)
-    print(f"🔹 [DEBUG] Найдено действий для {user_id}: {len(actions)}")
     return jsonify(actions)
     
 @app.route('/api/stats', methods=['GET'])
@@ -74,6 +70,7 @@ if __name__ == '__main__':
     database.init_db()
 
     app.run(host="0.0.0.0", port=port)
+
 
 
 
