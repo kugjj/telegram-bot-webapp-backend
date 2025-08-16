@@ -23,9 +23,24 @@ async def start(message: types.Message):
     })
     database.log_action(user.id, "started_bot")
 
-    kb = [[types.InlineKeyboardButton(text="📱 Открыть интерфейс", web_app=types.WebAppInfo(url=WEBAPP_URL))]]
-    keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
-    await message.answer(f"Привет, {user.first_name}! 👋\nНажми кнопку ниже, чтобы открыть интерфейс.", reply_markup=keyboard)
+    # Кнопки под полем ввода
+    kb = [
+        [types.KeyboardButton(text="📚 Помощь"), types.KeyboardButton(text="👤 Профиль")],
+        [types.KeyboardButton(text="⚙️ Настройки"), types.KeyboardButton(text="📊 WebApp")]
+    ]
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=kb,
+        resize_keyboard=True,           # кнопки подстраиваются под экран
+        one_time_keyboard=False,        # не исчезают после нажатия
+        input_field_placeholder="Выбери команду..."
+    )
+
+    await message.answer(
+        f"Привет, {user.first_name}! 👋\n"
+        "Я — твой умный бот с веб-интерфейсом.\n"
+        "Выбери, что хочешь сделать:",
+        reply_markup=keyboard
+    )
 
 @dp.message(Command("admin"))
 async def admin(message: types.Message):
@@ -85,6 +100,7 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
