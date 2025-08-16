@@ -51,21 +51,21 @@ async def admin(message: types.Message):
     text = "\n".join([f"[{a['time']}] {a['user']}: {a['action']}" for a in all_actions[:30]])
     await message.answer(f"📋 Последние 30 действий:\n\n{text}")
 
-@dp.message(Command("help"))
-async def cmd_help(message: types.Message):
+@dp.message(F.text == "📚 Помощь")
+async def show_help(message: types.Message):
     text = (
         "📚 **Справка по боту**\n\n"
         "Команды:\n"
         "• /start — начать\n"
         "• /profile — твой профиль\n"
-        "• /settings — настройки (в разработке)\n"
+        "• /settings — настройки\n"
         "• /help — помощь\n\n"
-        "WebApp показывает твои действия и статистику."
+        "Ты также можешь использовать кнопки ниже."
     )
     await message.answer(text, parse_mode="Markdown")
 
-@dp.message(Command("profile"))
-async def cmd_profile(message: types.Message):
+@dp.message(F.text == "👤 Профиль")
+async def show_profile(message: types.Message):
     user = message.from_user
     database.log_action(user.id, "viewed_profile")
     text = (
@@ -77,8 +77,8 @@ async def cmd_profile(message: types.Message):
     )
     await message.answer(text, parse_mode="Markdown")
 
-@dp.message(Command("settings"))
-async def cmd_settings(message: types.Message):
+@dp.message(F.text == "⚙️ Настройки")
+async def show_settings(message: types.Message):
     kb = [
         [types.InlineKeyboardButton(text="🔔 Уведомления", callback_data="settings_notify")],
         [types.InlineKeyboardButton(text="🎨 Тема", callback_data="settings_theme")]
@@ -86,13 +86,11 @@ async def cmd_settings(message: types.Message):
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
     await message.answer("⚙️ Настройки", reply_markup=keyboard)
 
-@dp.callback_query(F.data == "settings_notify")
-async def settings_notify(callback: types.CallbackQuery):
-    await callback.answer("Уведомления включены!")
-
-@dp.callback_query(F.data == "settings_theme")
-async def settings_theme(callback: types.CallbackQuery):
-    await callback.answer("Тема: светлая")
+@dp.message(F.text == "📊 WebApp")
+async def open_webapp(message: types.Message):
+    kb = [[types.InlineKeyboardButton(text="📱 Открыть WebApp", web_app=types.WebAppInfo(url=WEBAPP_URL))]]
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
+    await message.answer("Открой интерфейс:", reply_markup=keyboard)
 
 async def main():
     await dp.start_polling(bot)
@@ -100,6 +98,7 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
