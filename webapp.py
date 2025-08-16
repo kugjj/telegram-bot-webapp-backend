@@ -27,7 +27,39 @@ def index():
 def static_files(filename):
     return send_from_directory('static', filename)
 
+@app.route('/api/stats', methods=['GET'])
+def stats():
+    conn = database.get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM users")
+    users = cursor.fetchone()['count']
+    cursor.execute("SELECT COUNT(*) as count FROM actions")
+    actions = cursor.fetchone()['count']
+    conn.close()
+    return jsonify({"users": users, "actions": actions})
+
+@app.route('/api/user/profile', methods=['POST'])
+def user_profile():
+    user_id = request.json.get('user_id')
+    conn = database.get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT username, first_name, last_name, created_at 
+        FROM users WHERE id = %s
+    """, (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return jsonify({
+            "username": row["username"],
+            "first_name": row["first_name"],
+            "last_name": row["last_name"],
+            "created_at": row["created_at"].isoformat()
+        })
+    return jsonify({"error": "User not found"}), 404
+
 if __name__ == '__main__':
     port = int(os.getenv("PORT", 5000))
     database.init_db()
+
     app.run(host="0.0.0.0", port=port)
