@@ -19,11 +19,7 @@ def user_actions():
     print(f"🔹 [DEBUG] Найдено действий для {user_id}: {len(actions)}")
     return jsonify(actions)
 
-@app.route('/api/user/actions', methods=['POST'])
-def user_actions():
-    user_id = request.json.get('user_id')
-    actions = database.get_user_actions(user_id)
-    return jsonify(actions)
+
 
 @app.route('/api/admin/actions', methods=['GET'])
 def admin_actions():
@@ -77,6 +73,7 @@ if __name__ == '__main__':
     database.init_db()
 
     app.run(host="0.0.0.0", port=port)
+
 
 
 
