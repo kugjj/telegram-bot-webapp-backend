@@ -48,16 +48,6 @@ def index():
 def static_files(filename):
     return send_from_directory('static', filename)
 
-@app.route('/api/stats', methods=['GET'])
-def stats():
-    conn = database.get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) as count FROM users")
-    users = cursor.fetchone()['count']
-    cursor.execute("SELECT COUNT(*) as count FROM actions")
-    actions = cursor.fetchone()['count']
-    conn.close()
-    return jsonify({"users": users, "actions": actions})
 
 @app.route('/api/user/profile', methods=['POST'])
 def user_profile():
@@ -84,6 +74,7 @@ if __name__ == '__main__':
     database.init_db()
 
     app.run(host="0.0.0.0", port=port)
+
 
 
 
