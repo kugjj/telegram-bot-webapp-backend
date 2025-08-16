@@ -5,7 +5,7 @@ import database
 import os
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBAPP_URL = "https://kugjj.github.io"  # ⚠️ ПОМЕНЯЙ!
+WEBAPP_URL = "https://kugjj.github.io/"  # ⚠️ ПОМЕНЯЙ!
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
 
 bot = Bot(token=BOT_TOKEN)
@@ -38,5 +38,6 @@ async def admin(message: types.Message):
 async def main():
 
     await dp.start_polling(bot)
+
 
 
