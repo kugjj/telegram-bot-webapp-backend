@@ -5,7 +5,7 @@ import database
 import os
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBAPP_URL = "https://your-github-username.github.io/telegram-webapp"  # ⚠️ ПОМЕНЯЙ!
+WEBAPP_URL = "web-production-7ec07.up.railway.app"  # ⚠️ ПОМЕНЯЙ!
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
 
 bot = Bot(token=BOT_TOKEN)
@@ -36,4 +36,5 @@ async def admin(message: types.Message):
     await message.answer(f"📋 Последние 30 действий:\n\n{text}")
 
 async def main():
+
     await dp.start_polling(bot)
