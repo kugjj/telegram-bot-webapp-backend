@@ -18,7 +18,18 @@ def user_actions():
     actions = database.get_user_actions(user_id)
     print(f"🔹 [DEBUG] Найдено действий для {user_id}: {len(actions)}")
     return jsonify(actions)
-
+    
+@app.route('/api/stats', methods=['GET'])
+def stats():
+    print("🔹 [DEBUG] Получен GET-запрос на /api/stats")
+    conn = database.get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM users")
+    users = cursor.fetchone()['count']
+    cursor.execute("SELECT COUNT(*) as count FROM actions")
+    actions = cursor.fetchone()['count']
+    conn.close()
+    return jsonify({"users": users, "actions": actions})
 
 
 @app.route('/api/admin/actions', methods=['GET'])
@@ -73,6 +84,7 @@ if __name__ == '__main__':
     database.init_db()
 
     app.run(host="0.0.0.0", port=port)
+
 
 
 
