@@ -1,5 +1,5 @@
 # webapp.py
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, make_response
 from flask_cors import CORS 
 import database
 import os
@@ -14,7 +14,15 @@ CORS(app, resources={
     }
 })   # Разрешает запросы с любого домена
 
-
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+        response.headers.add("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+        return response
+        
 @app.route('/api/user/actions', methods=['POST'])
 def user_actions():
     print("🔹 [DEBUG] Запрос получен!")
@@ -78,6 +86,7 @@ if __name__ == '__main__':
     database.init_db()
 
     app.run(host="0.0.0.0", port=port)
+
 
 
 
