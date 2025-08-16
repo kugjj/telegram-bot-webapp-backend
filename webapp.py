@@ -4,7 +4,15 @@ from flask_cors import CORS
 import database
 import os
 app = Flask(__name__, static_folder='static')
-CORS(app)    # Разрешает запросы с любого домена
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "https://t.me",
+            "https://web-production-7ec07.up.railway.app",
+            "https://*.railway.app"
+        ]
+    }
+})   # Разрешает запросы с любого домена
 
 
 @app.route('/api/user/actions', methods=['POST'])
@@ -70,6 +78,7 @@ if __name__ == '__main__':
     database.init_db()
 
     app.run(host="0.0.0.0", port=port)
+
 
 
 
