@@ -59,24 +59,17 @@
     <div id="actions">Загрузка...</div>
   </div>
 
-  <div class="box">
-    <h3>Статус</h3>
-    <div id="status">Инициализация...</div>
-  </div>
-
   <button onclick="tg.showAlert('Если не работает — напиши разработчику')">Помощь</button>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user || {};
-    const statusEl = document.getElementById('status');
-    const API_URL = "https://web-production-7ec07.up.railway.app"; // ✅ Правильный URL
+    const API_URL = "https://web-production-7ec07.up.railway.app";
 
     // Показываем имя
     document.getElementById('user').textContent = user.username || user.first_name || "Пользователь";
 
-    // Вспомогательная функция
     function showError(el, text) {
       el.innerHTML = `<span class="error">❌ ${text}</span>`;
     }
@@ -85,87 +78,62 @@
       el.innerHTML = text;
     }
 
-    // Обновляем статус
-    statusEl.textContent = "1. Загрузка данных...";
-
-    // 1. Статистика
+    // --- 1. Статистика ---
     fetch(`${API_URL}/api/stats`)
-      .then(r => {
-        if (!r.ok) throw new Error(`Ошибка ${r.status}`);
-        return r.json();
-      })
+      .then(r => r.json())
       .then(data => {
-        statusEl.innerHTML += "<br>✅ Статистика загружена";
         document.getElementById('user-count').textContent = data.users || 0;
         document.getElementById('action-count').textContent = data.actions || 0;
       })
       .catch(err => {
-        statusEl.innerHTML += `<br>❌ Статистика: ${err.message}`;
         showError(document.getElementById('user-count'), "ошибка");
         showError(document.getElementById('action-count'), "ошибка");
       });
 
-    // 2. Профиль
+    // --- 2. Профиль ---
     if (user.id) {
-      fetch(`${API_URL}/api/user/profile`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id })
-      })
-      .then(r => {
-        if (!r.ok) throw new Error(`Ошибка ${r.status}`);
-        return r.json();
-      })
-      .then(data => {
-        statusEl.innerHTML += "<br>✅ Профиль загружен";
-        const info = `
-          <strong>Юзернейм:</strong> ${data.username || '—'}<br>
-          <strong>Имя:</strong> ${data.first_name || '—'}<br>
-          <strong>Дата:</strong> ${data.created_at?.split('T')[0] || '—'}
-        `;
-        showData(document.getElementById('profile-info'), info);
-      })
-      .catch(err => {
-        statusEl.innerHTML += `<br>❌ Профиль: ${err.message}`;
-        showError(document.getElementById('profile-info'), "ошибка загрузки");
-      });
+      fetch(`${API_URL}/api/user/profile?user_id=${user.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) return showError(document.getElementById('profile-info'), data.error);
+          const info = `
+            <strong>Юзернейм:</strong> ${data.username || '—'}<br>
+            <strong>Имя:</strong> ${data.first_name || '—'}<br>
+            <strong>Дата:</strong> ${data.created_at?.split('T')[0] || '—'}
+          `;
+          showData(document.getElementById('profile-info'), info);
+        })
+        .catch(err => {
+          showError(document.getElementById('profile-info'), "ошибка загрузки");
+        });
     } else {
-      statusEl.innerHTML += "<br>❌ Нет данных пользователя";
-      showError(document.getElementById('profile-info'), "нет user.id");
+      showError(document.getElementById('profile-info'), "нет данных");
     }
 
-    // 3. Действия
+    // --- 3. Действия ---
     if (user.id) {
-      fetch(`${API_URL}/api/user/actions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id })
-      })
-      .then(r => {
-        if (!r.ok) throw new Error(`Ошибка ${r.status}`);
-        return r.json();
-      })
-      .then(data => {
-        statusEl.innerHTML += "<br>✅ Действия загружены";
-        const container = document.getElementById('actions');
-        container.innerHTML = '';
-        if (!data || data.length === 0) {
-          container.textContent = 'Нет действий.';
-          return;
-        }
-        data.forEach(item => {
-          const div = document.createElement('div');
-          div.className = 'action';
-          const time = new Date(item.time).toLocaleString('ru-RU');
-          div.textContent = `[${time}] ${item.action}`;
-          container.appendChild(div);
+      fetch(`${API_URL}/api/user/actions?user_id=${user.id}`)
+        .then(r => r.json())
+        .then(data => {
+          const container = document.getElementById('actions');
+          container.innerHTML = '';
+          if (!data || data.length === 0) {
+            container.textContent = 'Нет действий.';
+            return;
+          }
+          data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'action';
+            const time = new Date(item.time).toLocaleString('ru-RU');
+            div.textContent = `[${time}] ${item.action}`;
+            container.appendChild(div);
+          });
+        })
+        .catch(err => {
+          showError(document.getElementById('actions'), "ошибка загрузки");
         });
-      })
-      .catch(err => {
-        statusEl.innerHTML += `<br>❌ Действия: ${err.message}`;
-        showError(document.getElementById('actions'), "ошибка загрузки");
-      });
     }
   </script>
 </body>
 </html>
+
