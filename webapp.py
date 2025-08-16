@@ -3,6 +3,8 @@ from flask import Flask, request, jsonify, send_from_directory, make_response
 from flask_cors import CORS 
 import database
 import os
+app = Flask(__name__, static_folder='static')
+
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -82,6 +84,7 @@ if __name__ == '__main__':
     database.init_db()
 
     app.run(host="0.0.0.0", port=port)
+
 
 
 
