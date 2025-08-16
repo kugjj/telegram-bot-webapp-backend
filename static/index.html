@@ -22,7 +22,7 @@
         const user = tg.initDataUnsafe.user;
         document.getElementById('user').textContent = user?.username || user?.first_name || "Пользователь";
 
-        const API_URL = "https://your-railway-project.up.railway.app";  // ⚠️ ПОМЕНЯЙ НА СВОЙ
+        const API_URL = "web-production-7ec07.up.railway.app";  // ⚠️ ПОМЕНЯЙ НА СВОЙ
 
         fetch(`${API_URL}/api/user/actions`, {
             method: "POST",
