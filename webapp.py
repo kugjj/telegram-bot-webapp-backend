@@ -5,7 +5,7 @@ import database
 import os
 app = Flask(__name__, static_folder='static')
 CORS(app)    # Разрешает запросы с любого домена
-app = Flask(__name__, static_folder='static')
+
 
 @app.route('/api/user/actions', methods=['POST'])
 def user_actions():
@@ -74,6 +74,7 @@ if __name__ == '__main__':
     database.init_db()
 
     app.run(host="0.0.0.0", port=port)
+
 
 
 
