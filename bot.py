@@ -36,8 +36,12 @@ async def admin(message: types.Message):
     await message.answer(f"📋 Последние 30 действий:\n\n{text}")
 
 async def main():
-
     await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+
 
 
 
