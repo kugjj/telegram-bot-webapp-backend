@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <title>ТехноМир</title>
+  <title>Мой Бот</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <style>
@@ -55,25 +55,12 @@
       color: white;
       font-weight: bold;
     }
-    .profile-img {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: #00d4ff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: bold;
-      color: #1a1a2e;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1 class="text-center mb-4">👋 Привет, <span id="user">Пользователь</span>!</h1>
 
-    <!-- Статистика -->
     <div class="row mb-4">
       <div class="col-6 stat-box">
         <div class="stat-value" id="user-count">—</div>
@@ -85,26 +72,16 @@
       </div>
     </div>
 
-    <!-- Профиль -->
     <div class="card p-3 mb-4">
-      <div class="d-flex align-items-center">
-        <div class="profile-img">
-          <span id="user-initial">?</span>
-        </div>
-        <div class="ms-3">
-          <h5><i class="bi bi-person"></i> Твой профиль</h5>
-        </div>
-      </div>
-      <div id="profile-info" class="mt-2">Загрузка...</div>
+      <h5><i class="bi bi-person"></i> Твой профиль</h5>
+      <div id="profile-info">Загрузка...</div>
     </div>
 
-    <!-- Действия -->
     <div class="card p-3">
       <h5><i class="bi bi-clock-history"></i> Твои действия</h5>
       <div id="actions" class="loader">Загрузка...</div>
     </div>
 
-    <!-- Кнопка помощи -->
     <div class="text-center mt-4">
       <button class="btn btn-custom px-4" onclick="showHelp()">
         <i class="bi bi-question-circle"></i> Что я могу?
@@ -117,50 +94,43 @@
     tg.expand();
     const user = tg.initDataUnsafe.user || {};
     document.getElementById('user').textContent = user.username || user.first_name || "Пользователь";
-    
-    // Инициалы для аватарки
-    const firstLetter = (user.first_name || user.username || "П")[0].toUpperCase();
-    document.getElementById('user-initial').textContent = firstLetter;
 
-    // 🔁 Замени на свой URL
-    const API_URL = "https://web-production-7ec07.up.railway.app/";
+    const API_URL = "https://kugjj.github.io"; // ← Убедись, что это правильный URL
 
     function showHelp() {
-      tg.showAlert("Бот сохраняет твои действия. Команды: /start, /profile, /help. Ты можешь открыть WebApp в любое время.");
+      tg.showAlert("Бот сохраняет твои действия. Команды: /start, /profile, /help");
     }
 
-    // Получить статистику
+    // --- 1. Статистика ---
     fetch(`${API_URL}/api/stats`)
       .then(r => r.json())
       .then(data => {
         document.getElementById('user-count').textContent = data.users || 0;
         document.getElementById('action-count').textContent = data.actions || 0;
-      })
-      .catch(err => {
-        console.error("Stats error:", err);
-        document.getElementById('user-count').textContent = "—";
-        document.getElementById('action-count').textContent = "—";
       });
 
-    // Получить профиль
+    // --- 2. Профиль ---
     if (user.id) {
       fetch(`${API_URL}/api/user/profile?user_id=${user.id}`)
         .then(r => r.json())
         .then(data => {
           const info = document.getElementById('profile-info');
           info.innerHTML = `
-            <strong>Юзернейм:</strong> @${data.username || 'не указан'}<br>
+            <strong>Юзернейм:</strong> ${data.username || '—'}<br>
             <strong>Имя:</strong> ${data.first_name || '—'}<br>
-            <strong>Дата регистрации:</strong> ${data.created_at?.split('T')[0] || '—'}
+            <strong>Дата:</strong> ${data.created_at?.split('T')[0] || '—'}
           `;
         })
         .catch(err => {
-          document.getElementById('profile-info').textContent = "Ошибка загрузки профиля.";
           console.error("Profile error:", err);
+          document.getElementById('profile-info').textContent = "Ошибка загрузки профиля.";
         });
+    } else {
+      console.warn("⚠️ user.id не найден");
+      document.getElementById('profile-info').textContent = "Ошибка загрузки профиля.";
     }
 
-    // Получить действия
+    // --- 3. Действия ---
     if (user.id) {
       fetch(`${API_URL}/api/user/actions?user_id=${user.id}`)
         .then(r => r.json())
@@ -168,7 +138,7 @@
           const container = document.getElementById('actions');
           container.innerHTML = '';
           if (!data || data.length === 0) {
-            container.textContent = 'Ты ещё не сделал ни одного действия.';
+            container.textContent = 'Нет действий.';
             return;
           }
           data.forEach(item => {
@@ -180,14 +150,13 @@
           });
         })
         .catch(err => {
-          document.getElementById('actions').textContent = "Не удалось загрузить действия.";
           console.error("Actions error:", err);
+          document.getElementById('actions').textContent = "Не удалось загрузить действия.";
         });
+    } else {
+      console.warn("⚠️ user.id не найден");
+      document.getElementById('actions').textContent = "Не удалось загрузить действия.";
     }
   </script>
 </body>
 </html>
-
-
-
-
