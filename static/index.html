@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- ✅ Исправлено: убраны пробелы -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <title>ТехноМир</title>
-  <!-- ✅ Исправлено: убраны пробелы -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <style>
@@ -57,9 +55,17 @@
       color: white;
       font-weight: bold;
     }
-    .error {
-      color: #ff6b6b;
+    .profile-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #00d4ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
       font-weight: bold;
+      color: #1a1a2e;
     }
   </style>
 </head>
@@ -81,8 +87,15 @@
 
     <!-- Профиль -->
     <div class="card p-3 mb-4">
-      <h5><i class="bi bi-person"></i> Твой профиль</h5>
-      <div id="profile-info">Загрузка...</div>
+      <div class="d-flex align-items-center">
+        <div class="profile-img">
+          <span id="user-initial">?</span>
+        </div>
+        <div class="ms-3">
+          <h5><i class="bi bi-person"></i> Твой профиль</h5>
+        </div>
+      </div>
+      <div id="profile-info" class="mt-2">Загрузка...</div>
     </div>
 
     <!-- Действия -->
@@ -94,7 +107,7 @@
     <!-- Кнопка помощи -->
     <div class="text-center mt-4">
       <button class="btn btn-custom px-4" onclick="showHelp()">
-        <i class="bi bi-question-circle"></i> Помощь
+        <i class="bi bi-question-circle"></i> Что я могу?
       </button>
     </div>
   </div>
@@ -103,79 +116,59 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user || {};
-    // ✅ Исправлено: убраны пробелы
-    const API_URL = "https://web-production-7ec07.up.railway.app";
-
-    // Показываем имя
     document.getElementById('user').textContent = user.username || user.first_name || "Пользователь";
+    
+    // Инициалы для аватарки
+    const firstLetter = (user.first_name || user.username || "П")[0].toUpperCase();
+    document.getElementById('user-initial').textContent = firstLetter;
 
-    function showError(el, text) {
-      el.innerHTML = `<span class="error">❌ ${text}</span>`;
+    // 🔁 Замени на свой URL
+    const API_URL = "https://web-production-7ec07.up.railway.app/";
+
+    function showHelp() {
+      tg.showAlert("Бот сохраняет твои действия. Команды: /start, /profile, /help. Ты можешь открыть WebApp в любое время.");
     }
 
-    function showData(el, text) {
-      el.innerHTML = text;
-    }
-
-    // --- 1. Статистика ---
+    // Получить статистику
     fetch(`${API_URL}/api/stats`)
-      .then(r => {
-        console.log("📡 /api/stats status:", r.status);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
+      .then(r => r.json())
       .then(data => {
-        console.log("✅ stats:", data);
         document.getElementById('user-count').textContent = data.users || 0;
         document.getElementById('action-count').textContent = data.actions || 0;
       })
       .catch(err => {
-        console.error("❌ Ошибка stats:", err);
-        showError(document.getElementById('user-count'), "ошибка");
-        showError(document.getElementById('action-count'), "ошибка");
+        console.error("Stats error:", err);
+        document.getElementById('user-count').textContent = "—";
+        document.getElementById('action-count').textContent = "—";
       });
 
-    // --- 2. Профиль ---
+    // Получить профиль
     if (user.id) {
       fetch(`${API_URL}/api/user/profile?user_id=${user.id}`)
-        .then(r => {
-          console.log("📡 /api/user/profile status:", r.status);
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          return r.json();
-        })
+        .then(r => r.json())
         .then(data => {
-          console.log("✅ profile:", data);
-          if (data.error) return showError(document.getElementById('profile-info'), data.error);
-          const info = `
-            <strong>Юзернейм:</strong> ${data.username || '—'}<br>
+          const info = document.getElementById('profile-info');
+          info.innerHTML = `
+            <strong>Юзернейм:</strong> @${data.username || 'не указан'}<br>
             <strong>Имя:</strong> ${data.first_name || '—'}<br>
-            <strong>Дата:</strong> ${data.created_at?.split('T')[0] || '—'}
+            <strong>Дата регистрации:</strong> ${data.created_at?.split('T')[0] || '—'}
           `;
-          showData(document.getElementById('profile-info'), info);
         })
         .catch(err => {
-          console.error("❌ Ошибка профиля:", err);
-          showError(document.getElementById('profile-info'), "ошибка загрузки");
+          document.getElementById('profile-info').textContent = "Ошибка загрузки профиля.";
+          console.error("Profile error:", err);
         });
-    } else {
-      console.warn("⚠️ user.id не найден");
-      showError(document.getElementById('profile-info'), "нет данных");
     }
 
-    // --- 3. Действия ---
+    // Получить действия
     if (user.id) {
       fetch(`${API_URL}/api/user/actions?user_id=${user.id}`)
-        .then(r => {
-          console.log("📡 /api/user/actions status:", r.status);
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          return r.json();
-        })
+        .then(r => r.json())
         .then(data => {
-          console.log("✅ actions:", data);
           const container = document.getElementById('actions');
           container.innerHTML = '';
           if (!data || data.length === 0) {
-            container.textContent = 'Нет действий.';
+            container.textContent = 'Ты ещё не сделал ни одного действия.';
             return;
           }
           data.forEach(item => {
@@ -187,8 +180,8 @@
           });
         })
         .catch(err => {
-          console.error("❌ Ошибка действий:", err);
-          showError(document.getElementById('actions'), "ошибка загрузки");
+          document.getElementById('actions').textContent = "Не удалось загрузить действия.";
+          console.error("Actions error:", err);
         });
     }
   </script>
