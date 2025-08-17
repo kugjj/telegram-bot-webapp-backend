@@ -29,6 +29,14 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        message_text TEXT NOT NULL,
+        timestamp TIMESTAMP DEFAULT NOW()
+    )
+""")
     conn.commit()
     conn.close()
 
@@ -69,4 +77,5 @@ def get_all_actions():
     """)
     rows = cursor.fetchall()
     conn.close()
+
     return [{"user": r["username"], "action": r["action"], "time": r["timestamp"]} for r in rows]
