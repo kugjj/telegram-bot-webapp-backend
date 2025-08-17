@@ -1,19 +1,10 @@
 # bot.py
+# bot.py
 from aiogram import Bot, Dispatcher, types
 from aiogram import F
 from aiogram.filters import Command
 import database
 import os
-import random
-
-# Список интересных фактов
-FACTS = [
-    "Знаешь ли ты, что первый программист — женщина? Её звали Ада Лавлейс.",
-    "Смартфон сегодня мощнее, чем компьютеры, отправлявшие людей на Луну.",
-    "Слово 'баг' (ошибка) появилось, когда в компьютер залетел настоящий мотылёк.",
-    "Google зарабатывает больше на рекламе, чем все СМИ мира вместе взятые.",
-    "В 2025 году в мире будет больше устройств, чем людей."
-]
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 WEBAPP_URL = "https://kugjj.github.io"  # ⚠️ ПОМЕНЯЙ!
@@ -36,12 +27,12 @@ async def start(message: types.Message):
     # Кнопки под полем ввода
     kb = [
         [types.KeyboardButton(text="📚 Помощь"), types.KeyboardButton(text="👤 Профиль")],
-        [types.KeyboardButton(text="🏆 Достижения"), types.KeyboardButton(text="🧠 Факт")],
         [types.KeyboardButton(text="⚙️ Настройки"), types.KeyboardButton(text="📊 WebApp")]
     ]
     keyboard = types.ReplyKeyboardMarkup(
         keyboard=kb,
-        resize_keyboard=True,
+        resize_keyboard=True,           # кнопки подстраиваются под экран
+        one_time_keyboard=False,        # не исчезают после нажатия
         input_field_placeholder="Выбери команду..."
     )
 
@@ -102,52 +93,9 @@ async def open_webapp(message: types.Message):
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
     await message.answer("Открой интерфейс:", reply_markup=keyboard)
 
-@dp.message(Command("fact"))
-async def cmd_fact(message: types.Message):
-    user = message.from_user
-    database.log_action(user.id, "viewed_fact")
-    fact = random.choice(FACTS)
-    await message.answer(f"🧠 <i>{fact}</i>", parse_mode="HTML")
-
-@dp.message(Command("achievements"))
-async def cmd_achievements(message: types.Message):
-    user = message.from_user
-    database.log_action(user.id, "viewed_achievements")
-
-    # Получаем действия пользователя
-    actions = database.get_user_actions(user.id)
-    action_count = len(actions)
-
-    # Определяем достижения
-    achievements = []
-    if action_count >= 5:
-        achievements.append("🔥 Активный пользователь — сделал 5+ действий")
-    if action_count >= 10:
-        achievements.append("🏆 Мастер бота — 10+ действий")
-    if any(a["action"] == "viewed_profile" for a in actions):
-        achievements.append("👀 Любопытный — смотрел профиль")
-    if any(a["action"] == "started_bot" for a in actions):
-        achievements.append("👋 Новичок — только начал путь")
-
-    # Формируем текст
-    text = "🏆 <b>Твои достижения:</b>\n\n"
-    if achievements:
-        text += "\n".join(f"• {ach}" for ach in achievements)
-    else:
-        text += "Пока пусто... Но ты можешь это изменить!"
-
-    await message.answer(text, parse_mode="HTML")
 async def main():
     await dp.start_polling(bot)
 
-@dp.message(F.text == "🏆 Достижения")
-async def show_achievements(message: types.Message):
-    await cmd_achievements(message)
-
-@dp.message(F.text == "🧠 Факт")
-async def show_fact(message: types.Message):
-    await cmd_fact(message)
-    
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
