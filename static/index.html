@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <title>Интерактивный WebApp</title>
+  <title>Мой Бот</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <style>
@@ -14,6 +14,51 @@
       color: white;
       min-height: 100vh;
       padding: 20px 10px;
+      margin: 0;
+    }
+    .header {
+      text-align: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.5em;
+      text-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
+    }
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(26, 26, 46, 0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      padding: 10px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      color: #aaa;
+      font-size: 0.9em;
+    }
+    .tab i {
+      font-size: 1.3em;
+      display: block;
+    }
+    .tab.active {
+      color: #00d4ff;
+      font-weight: bold;
+    }
+    .tab.active i {
+      color: #00d4ff;
+    }
+    .content {
+      margin-bottom: 70px; /* чтобы не закрывало меню */
     }
     .card {
       background: rgba(255, 255, 255, 0.1);
@@ -22,6 +67,8 @@
       border-radius: 16px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       color: white;
+      padding: 16px;
+      margin-bottom: 16px;
     }
     .action, .message {
       padding: 10px;
@@ -33,65 +80,93 @@
     .message-user {
       border-left: 4px solid #00d4ff;
     }
-    .message-bot {
-      border-left: 4px solid #ff6b6b;
-    }
     input, button {
       margin-top: 10px;
-    }
-    .game-box {
-      text-align: center;
-      padding: 15px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
     }
     .loader {
       color: #aaa;
       font-style: italic;
+      text-align: center;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1 class="text-center mb-4">🎮 Привет, <span id="user">Пользователь</span>!</h1>
+  <!-- Заголовок -->
+  <div class="header">
+    <h1>👋 <span id="user">Пользователь</span></h1>
+  </div>
 
-    <!-- Статистика -->
-    <div class="row mb-4">
-      <div class="col-6 stat-box">
-        <div class="stat-value" id="user-count">—</div>
-        <div>Пользователей</div>
-      </div>
-      <div class="col-6 stat-box">
-        <div class="stat-value" id="action-count">—</div>
-        <div>Действий</div>
-      </div>
-    </div>
-
-    <!-- Игра -->
-    <div class="card p-3 mb-4">
-      <h5><i class="bi bi-controller"></i> Угадай число</h5>
-      <div class="game-box">
-        <p>Я загадал число от 1 до 10</p>
-        <input type="number" id="guess" min="1" max="10" placeholder="Твой вариант">
-        <button class="btn btn-sm btn-success" onclick="makeGuess()">Угадать</button>
-        <div id="game-result" class="mt-2"></div>
+  <!-- Основной контент -->
+  <div class="content">
+    <!-- Вкладка: Действия -->
+    <div id="tab-actions">
+      <div class="card">
+        <h5><i class="bi bi-clock-history"></i> Твои действия</h5>
+        <div id="actions">Загрузка...</div>
       </div>
     </div>
 
-    <!-- Сообщения -->
-    <div class="card p-3 mb-4">
-      <h5><i class="bi bi-chat-left-text"></i> Напиши боту</h5>
-      <input type="text" id="message-input" class="form-control" placeholder="Напиши что-нибудь...">
-      <button class="btn btn-primary mt-2" onclick="sendMessage()">Отправить</button>
-      <div id="messages" class="mt-3">
-        <div class="loader">Загрузка сообщений...</div>
+    <!-- Вкладка: Сообщения -->
+    <div id="tab-messages" class="hidden">
+      <div class="card">
+        <h5><i class="bi bi-chat-left-text"></i> Напиши боту</h5>
+        <input type="text" id="message-input" class="form-control" placeholder="Напиши что-нибудь...">
+        <button class="btn btn-primary mt-2" onclick="sendMessage()">Отправить</button>
+        <div id="messages" class="mt-3">
+          <div class="loader">Загрузка сообщений...</div>
+        </div>
       </div>
     </div>
 
-    <!-- Действия -->
-    <div class="card p-3">
-      <h5><i class="bi bi-clock-history"></i> Твои действия</h5>
-      <div id="actions">Загрузка...</div>
+    <!-- Вкладка: Игра -->
+    <div id="tab-game" class="hidden">
+      <div class="card">
+        <h5><i class="bi bi-controller"></i> Угадай число</h5>
+        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+          <p>Я загадал число от 1 до 10</p>
+          <input type="number" id="guess" min="1" max="10" placeholder="Твой вариант" class="form-control" style="width: 60%; margin: 10px auto;">
+          <button class="btn btn-success" onclick="makeGuess()">Угадать</button>
+          <div id="game-result" class="mt-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Вкладка: Профиль -->
+    <div id="tab-profile" class="hidden">
+      <div class="card">
+        <h5><i class="bi bi-person"></i> Твой профиль</h5>
+        <div id="profile-info">Загрузка...</div>
+      </div>
+      <div class="card">
+        <h5><i class="bi bi-graph-up"></i> Статистика</h5>
+        <div id="stats">
+          <strong>Пользователей:</strong> <span id="user-count">—</span><br>
+          <strong>Действий:</strong> <span id="action-count">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Меню (вкладки) -->
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('actions')">
+      <i class="bi bi-clock-history"></i>
+      <span>Действия</span>
+    </div>
+    <div class="tab" onclick="switchTab('messages')">
+      <i class="bi bi-chat-left-text"></i>
+      <span>Сообщения</span>
+    </div>
+    <div class="tab" onclick="switchTab('game')">
+      <i class="bi bi-controller"></i>
+      <span>Игра</span>
+    </div>
+    <div class="tab" onclick="switchTab('profile')">
+      <i class="bi bi-person"></i>
+      <span>Профиль</span>
     </div>
   </div>
 
@@ -103,36 +178,48 @@
 
     const API_URL = "https://web-production-7ec07.up.railway.app";
 
-    // --- Статистика ---
-    fetch(`${API_URL}/api/stats`)
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById('user-count').textContent = data.users || 0;
-        document.getElementById('action-count').textContent = data.actions || 0;
+    // --- Переключение вкладок ---
+    function switchTab(tabName) {
+      // Скрываем все
+      document.getElementById('tab-actions').classList.add('hidden');
+      document.getElementById('tab-messages').classList.add('hidden');
+      document.getElementById('tab-game').classList.add('hidden');
+      document.getElementById('tab-profile').classList.add('hidden');
+
+      // Убираем активный класс у всех
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
       });
 
-    // --- Действия ---
-    if (user.id) {
-      fetch(`${API_URL}/api/user/actions?user_id=${user.id}`)
-        .then(r => r.json())
-        .then(data => {
-          const container = document.getElementById('actions');
-          container.innerHTML = '';
-          if (!data || data.length === 0) {
-            container.textContent = 'Нет действий.';
-            return;
-          }
-          data.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'action';
-            const time = new Date(item.time).toLocaleString('ru-RU');
-            div.textContent = `[${time}] ${item.action}`;
-            container.appendChild(div);
-          });
-        });
+      // Показываем нужную
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+      // Делаем активной кнопку
+      document.querySelector(`.tab-bar .tab:nth-child(${{ actions: 1, messages: 2, game: 3, profile: 4 }[tabName]})`).classList.add('active');
     }
 
-    // --- Сообщения ---
+    // --- Загрузка данных ---
+    function loadActions() {
+      if (user.id) {
+        fetch(`${API_URL}/api/user/actions?user_id=${user.id}`)
+          .then(r => r.json())
+          .then(data => {
+            const container = document.getElementById('actions');
+            container.innerHTML = '';
+            if (!data || data.length === 0) {
+              container.textContent = 'Нет действий.';
+              return;
+            }
+            data.forEach(item => {
+              const div = document.createElement('div');
+              div.className = 'action';
+              const time = new Date(item.time).toLocaleString('ru-RU');
+              div.textContent = `[${time}] ${item.action}`;
+              container.appendChild(div);
+            });
+          });
+      }
+    }
+
     function loadMessages() {
       if (user.id) {
         fetch(`${API_URL}/api/user/messages?user_id=${user.id}`)
@@ -155,6 +242,31 @@
       }
     }
 
+    function loadProfile() {
+      if (user.id) {
+        // Статистика
+        fetch(`${API_URL}/api/stats`)
+          .then(r => r.json())
+          .then(data => {
+            document.getElementById('user-count').textContent = data.users || 0;
+            document.getElementById('action-count').textContent = data.actions || 0;
+          });
+
+        // Профиль
+        fetch(`${API_URL}/api/user/profile?user_id=${user.id}`)
+          .then(r => r.json())
+          .then(data => {
+            const info = document.getElementById('profile-info');
+            info.innerHTML = `
+              <strong>Юзернейм:</strong> ${data.username || '—'}<br>
+              <strong>Имя:</strong> ${data.first_name || '—'}<br>
+              <strong>Дата:</strong> ${data.created_at?.split('T')[0] || '—'}
+            `;
+          });
+      }
+    }
+
+    // --- Отправка сообщения ---
     function sendMessage() {
       const input = document.getElementById('message-input');
       const text = input.value.trim();
@@ -186,9 +298,13 @@
       setTimeout(() => result.innerHTML = '', 2000);
     }
 
-    // Загружаем сообщения при старте
+    // --- Загрузка при старте ---
+    loadActions();
     loadMessages();
+    loadProfile();
+
+    // Старт с вкладки "Действия"
+    switchTab('actions');
   </script>
 </body>
 </html>
-
