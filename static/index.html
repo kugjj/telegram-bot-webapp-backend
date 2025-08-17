@@ -64,8 +64,10 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user || {};
+    // ✅ Исправлено: убраны пробелы
     const API_URL = "https://web-production-7ec07.up.railway.app";
 
+    // Показываем имя
     document.getElementById('user').textContent = user.username || user.first_name || "Пользователь";
 
     function showError(el, text) {
@@ -74,12 +76,18 @@
 
     // --- 1. Статистика ---
     fetch(`${API_URL}/api/stats`)
-      .then(r => r.json())
+      .then(r => {
+        console.log("📡 /api/stats status:", r.status);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(data => {
+        console.log("✅ stats:", data);
         document.getElementById('user-count').textContent = data.users || 0;
         document.getElementById('action-count').textContent = data.actions || 0;
       })
-      .catch(() => {
+      .catch(err => {
+        console.error("❌ Ошибка stats:", err);
         showError(document.getElementById('user-count'), "ошибка");
         showError(document.getElementById('action-count'), "ошибка");
       });
@@ -87,8 +95,13 @@
     // --- 2. Профиль ---
     if (user.id) {
       fetch(`${API_URL}/api/user/profile?user_id=${user.id}`)
-        .then(r => r.json())
+        .then(r => {
+          console.log("📡 /api/user/profile status:", r.status);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
         .then(data => {
+          console.log("✅ profile:", data);
           if (data.error) return showError(document.getElementById('profile-info'), data.error);
           const info = `
             <strong>Юзернейм:</strong> ${data.username || '—'}<br>
@@ -97,16 +110,25 @@
           `;
           document.getElementById('profile-info').innerHTML = info;
         })
-        .catch(() => {
-          showError(document.getElementById('profile-info'), "ошибка");
+        .catch(err => {
+          console.error("❌ Ошибка профиля:", err);
+          showError(document.getElementById('profile-info'), "ошибка загрузки");
         });
+    } else {
+      console.warn("⚠️ user.id не найден");
+      showError(document.getElementById('profile-info'), "нет данных");
     }
 
     // --- 3. Действия ---
     if (user.id) {
       fetch(`${API_URL}/api/user/actions?user_id=${user.id}`)
-        .then(r => r.json())
+        .then(r => {
+          console.log("📡 /api/user/actions status:", r.status);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
         .then(data => {
+          console.log("✅ actions:", data);
           const container = document.getElementById('actions');
           container.innerHTML = '';
           if (!data || data.length === 0) {
@@ -121,8 +143,9 @@
             container.appendChild(div);
           });
         })
-        .catch(() => {
-          showError(document.getElementById('actions'), "ошибка");
+        .catch(err => {
+          console.error("❌ Ошибка действий:", err);
+          showError(document.getElementById('actions'), "ошибка загрузки");
         });
     }
   </script>
