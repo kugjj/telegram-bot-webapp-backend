@@ -66,6 +66,45 @@ def user_actions():
     except Exception as e:
         return jsonify({"error": "server error"}), 500
 
+# --- API: сохранить сообщение ---
+@app.route('/api/user/message', methods=['POST'])
+def save_message():
+    user_id = request.json.get('user_id')
+    text = request.json.get('text')
+    if not user_id or not text:
+        return jsonify({"error": "user_id or text missing"}), 400
+    try:
+        conn = database.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO messages (user_id, message_text, timestamp)
+            VALUES (%s, %s, NOW())
+        """, (user_id, text))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "saved"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- API: получить сообщения ---
+@app.route('/api/user/messages', methods=['GET'])
+def get_messages():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
+    try:
+        conn = database.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT message_text, timestamp FROM messages
+            WHERE user_id = %s ORDER BY timestamp DESC LIMIT 10
+        """, (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        messages = [{"text": row["message_text"], "time": row["timestamp"]} for row in rows]
+        return jsonify(messages)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 # --- Статика ---
 @app.route('/')
 def index():
@@ -80,6 +119,7 @@ if __name__ == '__main__':
     port = int(os.getenv("PORT", 8080))
     database.init_db()
     app.run(host="0.0.0.0", port=port)
+
 
 
 
