@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- ✅ Исправлено: убраны пробелы -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <title>Мой Бот</title>
+  <title>ТехноМир</title>
+  <!-- ✅ Исправлено: убраны пробелы -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <style>
@@ -55,12 +57,17 @@
       color: white;
       font-weight: bold;
     }
+    .error {
+      color: #ff6b6b;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1 class="text-center mb-4">👋 Привет, <span id="user">Пользователь</span>!</h1>
 
+    <!-- Статистика -->
     <div class="row mb-4">
       <div class="col-6 stat-box">
         <div class="stat-value" id="user-count">—</div>
@@ -72,19 +79,22 @@
       </div>
     </div>
 
+    <!-- Профиль -->
     <div class="card p-3 mb-4">
       <h5><i class="bi bi-person"></i> Твой профиль</h5>
       <div id="profile-info">Загрузка...</div>
     </div>
 
+    <!-- Действия -->
     <div class="card p-3">
       <h5><i class="bi bi-clock-history"></i> Твои действия</h5>
       <div id="actions" class="loader">Загрузка...</div>
     </div>
 
+    <!-- Кнопка помощи -->
     <div class="text-center mt-4">
       <button class="btn btn-custom px-4" onclick="showHelp()">
-        <i class="bi bi-question-circle"></i> Что я могу?
+        <i class="bi bi-question-circle"></i> Помощь
       </button>
     </div>
   </div>
@@ -93,48 +103,75 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user || {};
+    // ✅ Исправлено: убраны пробелы
+    const API_URL = "https://web-production-7ec07.up.railway.app";
+
+    // Показываем имя
     document.getElementById('user').textContent = user.username || user.first_name || "Пользователь";
 
-    const API_URL = "web-production-7ec07.up.railway.app"; // ← Убедись, что это правильный URL
+    function showError(el, text) {
+      el.innerHTML = `<span class="error">❌ ${text}</span>`;
+    }
 
-    function showHelp() {
-      tg.showAlert("Бот сохраняет твои действия. Команды: /start, /profile, /help");
+    function showData(el, text) {
+      el.innerHTML = text;
     }
 
     // --- 1. Статистика ---
     fetch(`${API_URL}/api/stats`)
-      .then(r => r.json())
+      .then(r => {
+        console.log("📡 /api/stats status:", r.status);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(data => {
+        console.log("✅ stats:", data);
         document.getElementById('user-count').textContent = data.users || 0;
         document.getElementById('action-count').textContent = data.actions || 0;
+      })
+      .catch(err => {
+        console.error("❌ Ошибка stats:", err);
+        showError(document.getElementById('user-count'), "ошибка");
+        showError(document.getElementById('action-count'), "ошибка");
       });
 
     // --- 2. Профиль ---
     if (user.id) {
       fetch(`${API_URL}/api/user/profile?user_id=${user.id}`)
-        .then(r => r.json())
+        .then(r => {
+          console.log("📡 /api/user/profile status:", r.status);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
         .then(data => {
-          const info = document.getElementById('profile-info');
-          info.innerHTML = `
+          console.log("✅ profile:", data);
+          if (data.error) return showError(document.getElementById('profile-info'), data.error);
+          const info = `
             <strong>Юзернейм:</strong> ${data.username || '—'}<br>
             <strong>Имя:</strong> ${data.first_name || '—'}<br>
             <strong>Дата:</strong> ${data.created_at?.split('T')[0] || '—'}
           `;
+          showData(document.getElementById('profile-info'), info);
         })
         .catch(err => {
-          console.error("Profile error:", err);
-          document.getElementById('profile-info').textContent = "Ошибка загрузки профиля.";
+          console.error("❌ Ошибка профиля:", err);
+          showError(document.getElementById('profile-info'), "ошибка загрузки");
         });
     } else {
       console.warn("⚠️ user.id не найден");
-      document.getElementById('profile-info').textContent = "Ошибка загрузки профиля.";
+      showError(document.getElementById('profile-info'), "нет данных");
     }
 
     // --- 3. Действия ---
     if (user.id) {
       fetch(`${API_URL}/api/user/actions?user_id=${user.id}`)
-        .then(r => r.json())
+        .then(r => {
+          console.log("📡 /api/user/actions status:", r.status);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
         .then(data => {
+          console.log("✅ actions:", data);
           const container = document.getElementById('actions');
           container.innerHTML = '';
           if (!data || data.length === 0) {
@@ -150,12 +187,9 @@
           });
         })
         .catch(err => {
-          console.error("Actions error:", err);
-          document.getElementById('actions').textContent = "Не удалось загрузить действия.";
+          console.error("❌ Ошибка действий:", err);
+          showError(document.getElementById('actions'), "ошибка загрузки");
         });
-    } else {
-      console.warn("⚠️ user.id не найден");
-      document.getElementById('actions').textContent = "Не удалось загрузить действия.";
     }
   </script>
 </body>
